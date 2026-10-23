@@ -2,7 +2,7 @@
 
 Codex와 Claude Code가 어떤 토큰·시간 값을 내는지, 그 값을 이 실험에서 어떻게 분류하는지 정리한다(S15P31A106-280, Issue #28). 이 문서는 [protocol](README.md)의 조건, 지표, 판정 규칙을 바꾸지 않는다. protocol 의미를 바꿔야 할 내용은 [§8](#8-protocol-개정-제안으로-남길-사항)에 제안으로만 남긴다.
 
-유료 Codex·Claude Code 실행은 하지 않았다. 아래 내용은 공식 문서, CLI `--help`, 저장소 코드, 공식 문서 형식을 따른 비식별 샘플로만 확인했다.
+벤치마크 실행은 하지 않았다. 아래 내용은 공식 문서, CLI `--help`, 저장소 코드, 공식 문서 형식을 따른 샘플, 그리고 출력 형식 확인을 위해 승인받아 실행한 작은 `claude -p` 로그 두 개(인증 실패 1, 성공 1, [§6](#6-검증에-쓴-샘플))로 확인했다.
 
 ## 1. 분류 기준
 
@@ -39,7 +39,7 @@ CLI 버전이 바뀌면 필드가 달라질 수 있다. 실제 실행 결과를 
 `claude -p`에 `--output-format`을 준다.
 
 - `json`: 실행이 끝나면 `result` 메시지 하나를 JSON 문서로 낸다.
-- `stream-json`(`--verbose` 필요): 줄마다 event 하나. 보통 `system/init`, `assistant`·`user` 메시지가 이어지고 마지막 줄이 `result`이다.
+- `stream-json`(`--verbose` 필요): 줄마다 event 하나. 보통 `system/init`, `assistant`·`user` 메시지가 이어지고 `result`가 온다. 문서는 마지막 줄이 `result`라고 하지만, CLI 2.1.263 실제 실행에서는 `result` 뒤에 `system/task_summary` 줄이 하나 더 나왔다. 설정된 hook이 있으면 `init` 앞에 `system/hook_started`, `system/hook_response`가 나온다. 그래서 줄 위치가 아니라 `type`으로 `result`를 찾는다.
 
 `result`의 형식(문서의 `SDKResultMessage`): `subtype`(`success`, `error_max_turns`, `error_during_execution`, `error_max_budget_usd`, `error_max_structured_output_retries`), `is_error`, `num_turns`, `duration_ms`, `duration_api_ms`, `total_cost_usd`, `usage`, `modelUsage`.
 
@@ -83,16 +83,29 @@ CLI 버전이 바뀌면 필드가 달라질 수 있다. 실제 실행 결과를 
 
 ## 6. 검증에 쓴 샘플
 
-성공한 실제 실행 로그는 아직 없다. 정상 경로는 **공식 문서 형식으로만 검증했다.** 실제 로그는 2026-10-23에 승인받아 실행한 `claude -p` 한 번(CLI 2.1.263, `--output-format stream-json --verbose --allowedTools Read --max-budget-usd 0.5`)뿐이며, OAuth 세션 만료로 모델 호출 없이 끝났다(비용 0). 이 로그로 오류 결과 처리([§5](#5-claude-code-집계-규칙) 6번)를 검증했다. 같은 실행에서 hook과 `system/init` event가 `result` 앞에 오는 것도 확인했다.
+공식 문서 형식 샘플 3개와 실제 실행 로그 2개로 검증했다. 실제 실행은 모두 2026-10-23, CLI 2.1.263, 구독 로그인(claude.ai), 빈 임시 폴더에서 `claude -p "<파일 두 개를 병렬로 읽고 한 줄로 답하라>" --allowedTools Read --output-format stream-json --verbose --max-budget-usd 0.5`로 했다. 첫 실행은 OAuth 세션 만료로 모델 호출 없이 끝났고(비용 0, [§5](#5-claude-code-집계-규칙) 6번 검증), 다시 로그인한 뒤의 실행은 성공했다.
 
-| fixture | 내용 |
-|---|---|
-| [auth-failed.real.jsonl](../../../bench/value-validation/fixtures/claude/auth-failed.real.jsonl) | 위 실제 실행. 허용 목록 방식으로 비식별 처리: event의 `type`·`subtype`·`parent_tool_use_id`·`error`, assistant 메시지의 `model`·`usage`, `result`의 숫자·상태 필드만 남겼다. message id는 `msg-redacted`로 바꿨다. 원본 로그는 저장소 밖 로컬에만 둔다 |
-| [result.json](../../../bench/value-validation/fixtures/claude/result.json) | `--output-format json`의 성공 결과 |
-| [stream.jsonl](../../../bench/value-validation/fixtures/claude/stream.jsonl) | `system/init`, 같은 id를 공유하는 병렬 tool 호출 assistant 메시지 2개, tool result, 두 번째 응답, 최종 `result` |
-| [truncated.jsonl](../../../bench/value-validation/fixtures/claude/truncated.jsonl) | 위 stream이 `result` 줄 중간에서 끊긴 것 |
+| fixture | 출처 | 내용 |
+|---|---|---|
+| [result.json](../../../bench/value-validation/fixtures/claude/result.json) | 문서 형식, 만든 숫자 | `--output-format json`의 성공 결과 |
+| [stream.jsonl](../../../bench/value-validation/fixtures/claude/stream.jsonl) | 문서 형식, 만든 숫자 | `system/init`, 같은 id를 공유하는 병렬 tool 호출 assistant 메시지 2개, tool result, 두 번째 응답, 최종 `result` |
+| [truncated.jsonl](../../../bench/value-validation/fixtures/claude/truncated.jsonl) | 문서 형식, 만든 숫자 | 위 stream이 `result` 줄 중간에서 끊긴 것 |
+| [auth-failed.real.jsonl](../../../bench/value-validation/fixtures/claude/auth-failed.real.jsonl) | 실제 실행(인증 실패) | hook event, `system/init`, 합성 assistant 메시지, `subtype: "success"`·`is_error: true`·`terminal_reason: "api_error"`·모든 토큰 `0`인 `result` |
+| [real-stream.jsonl](../../../bench/value-validation/fixtures/claude/real-stream.jsonl) | 실제 실행(성공) | hook event, 같은 id의 assistant 메시지 3개(thinking, tool_use 2), tool result 2, 응답, `result`, 그 뒤 `system/task_summary` |
 
-비식별 처리: 숫자는 만든 값이고, 프롬프트·응답 본문은 `<redacted>`, 세션 ID는 `session-redacted`, 모델 이름은 `<model>`로 바꿨다. 로컬 경로, 저장소 정보, 인증 정보는 넣지 않았다. 회귀 테스트는 [claude-measure.test.mjs](../../../bench/value-validation/claude-measure.test.mjs)에 있다.
+성공 실행에서 관측한 값:
+
+| 값 | 출처 | 관측 |
+|---|---|---|
+| 입력 / 캐시 생성 / 캐시 읽기 / 출력 토큰 | 최종 `result.usage` | 4 / 60,177 / 59,856 / 184 |
+| 같은 값을 assistant event에서 단순 합산 | assistant 메시지 4개 | 8 / 179,889 / 59,856 / 7 |
+| harness wall time | 셸에서 잰 프로세스 시작~종료 | 12,360 ms |
+| `duration_ms` / `duration_api_ms` | 최종 `result` | 8,857 ms / 4,920 ms |
+| `total_cost_usd` | 최종 `result`(ESTIMATED) | 0.2545 |
+
+assistant event를 단순 합산하면 캐시 생성 토큰은 같은 message id가 세 번 반복돼 약 3배가 되고, 출력 토큰은 placeholder(2, 1)라 실제 184 대신 7이 된다. 세 시간 값은 서로 크게 다르므로 바꿔 쓰지 않는다.
+
+비식별 처리: 문서 형식 샘플의 숫자는 만든 값이고, 프롬프트·응답 본문은 `<redacted>`, 세션 ID는 `session-redacted`, 모델 이름은 `<model>`로 바꿨다. 실제 로그는 허용 목록 방식으로 줄였다. event의 `type`·`subtype`·`parent_tool_use_id`, 내용 블록의 `type`, message id(`msg_1`처럼 바꿈, 중복 관계는 유지), 토큰·시간·비용 숫자와 상태 필드만 남기고 프롬프트, 응답, 파일 내용, 세션 ID, 경로, 계정·rate limit 정보는 모두 버렸다(`auth-failed.real.jsonl`은 assistant의 `model`과 `error`도 남겼고 message id는 `msg-redacted`). 원본 로그는 저장소 밖 로컬에만 둔다. 회귀 테스트는 [claude-measure.test.mjs](../../../bench/value-validation/claude-measure.test.mjs)에 있다.
 
 Codex 파서의 샘플과 회귀 테스트는 [measure.test.mjs](../../../bench/value-validation/measure.test.mjs)에 있다.
 
@@ -101,7 +114,7 @@ Codex 파서의 샘플과 회귀 테스트는 [measure.test.mjs](../../../bench/
 - CLI가 내지 않는 도구별 실행 시간, 세션 안 구간별 토큰
 - 사람이 재지 않은 사람 단계 시간, 판정하지 않은 승인 요청 여부
 - 청구 자료가 없는 실제 과금액(`total_cost_usd`를 대신 쓰지 않는다)
-- usage event가 하나라도 불완전한 Codex 세션의 토큰, `result`가 없거나 둘 이상인 Claude Code 실행의 값
+- usage event가 하나라도 불완전한 Codex 세션의 토큰, `result`가 없거나 둘 이상인 Claude Code 실행의 값, API 오류·crash·예산 초과로 끝난 Claude Code 실행의 토큰과 비용
 - 값이 빠진 run이 하나라도 있는 조건의 합계·중앙값
 
 ## 8. protocol 개정 제안으로 남길 사항

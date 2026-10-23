@@ -1,7 +1,8 @@
 // Regression tests for the Claude Code final-result parser (S15P31A106-280, #28). Fixtures in fixtures/claude/ follow
 // the result and stream shapes in the official Claude Code docs (headless mode, Agent SDK cost tracking and TypeScript
-// SDKResultMessage, read 2026-10-23, CLI 2.1.263) with made-up numbers and redacted text. auth-failed.real.jsonl is a
-// real CLI 2.1.263 stream-json run (OAuth expired, no model call) reduced to an allow-list of structural and numeric fields.
+// SDKResultMessage, read 2026-10-23, CLI 2.1.263) with made-up numbers and redacted text. auth-failed.real.jsonl (OAuth
+// expired, no model call) and real-stream.jsonl (a successful run) are real CLI 2.1.263 stream-json runs reduced to an
+// allow-list of structural and numeric fields.
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseClaudeResult } from "./claude-measure.mjs";
@@ -22,6 +23,19 @@ describe("Claude Code final result parser (NOT MEASURED rule)", () => {
     expect(s.usage).toEqual(expected);
     expect(s.durationMs).toBe(41250);
     expect(parseClaudeResult(fixture("stream.jsonl").replace(/\n/gu, "\r\n")).usage).toEqual(expected);
+  });
+
+  it("a real run: result usage differs from summed assistant events, and events after the result are ignored", () => {
+    const text = fixture("real-stream.jsonl");
+    expect(parseClaudeResult(text)).toEqual({
+      resultCount: 1, subtype: "success", isError: false, numTurns: 3, durationMs: 8857, durationApiMs: 4920,
+      usage: { input: 4, cacheCreation: 60177, cacheRead: 59856, output: 184 }, costUsdEstimate: 0.2545272,
+    });
+    const events = text.split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const assistant = events.filter((e) => e.type === "assistant");
+    expect(assistant.reduce((p, e) => p + e.message.usage.output_tokens, 0)).toBe(7); // placeholders, not 184
+    expect(assistant.reduce((p, e) => p + e.message.usage.cache_creation_input_tokens, 0)).toBe(179889); // msg_1 three times
+    expect(events.at(-1).type).not.toBe("result");
   });
 
   it("a stream cut before its result, or no output, is NOT MEASURED", () => {
