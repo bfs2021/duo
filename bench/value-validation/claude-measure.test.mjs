@@ -1,6 +1,7 @@
 // Regression tests for the Claude Code final-result parser (S15P31A106-280, #28). Fixtures in fixtures/claude/ follow
 // the result and stream shapes in the official Claude Code docs (headless mode, Agent SDK cost tracking and TypeScript
-// SDKResultMessage, read 2026-10-23, CLI 2.1.263) with made-up numbers and redacted text; no real run log is used.
+// SDKResultMessage, read 2026-10-23, CLI 2.1.263) with made-up numbers and redacted text. auth-failed.real.jsonl is a
+// real CLI 2.1.263 stream-json run (OAuth expired, no model call) reduced to an allow-list of structural and numeric fields.
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseClaudeResult } from "./claude-measure.mjs";
@@ -65,5 +66,12 @@ describe("Claude Code final result parser (NOT MEASURED rule)", () => {
       expect(s.durationMs).toBe(10);
     }
     expect(parseClaudeResult(result({ subtype: "error_max_turns", is_error: true })).usage).toEqual({ input: 1, cacheCreation: 2, cacheRead: 3, output: 4 });
+  });
+
+  it("a real run that failed on an API error reports zeros under subtype success; they are NOT MEASURED, not 0", () => {
+    const s = parseClaudeResult(fixture("auth-failed.real.jsonl"));
+    expect(s).toEqual({ resultCount: 1, subtype: "success", isError: true, numTurns: 1, durationMs: 2043, durationApiMs: 0, usage: null, costUsdEstimate: null });
+    expect(parseClaudeResult(result({ terminal_reason: "api_error" })).usage).toBeNull();
+    expect(parseClaudeResult(result({ terminal_reason: "completed" })).usage).toEqual({ input: 1, cacheCreation: 2, cacheRead: 3, output: 4 });
   });
 });

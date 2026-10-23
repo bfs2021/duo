@@ -73,7 +73,8 @@ CLI 버전이 바뀌면 필드가 달라질 수 있다. 실제 실행 결과를 
 3. **필드는 하나씩 판단한다.** 숫자가 아닌 필드는 그 값만 `null`이다. `usage` 객체가 없으면 usage 전체가 `null`이다. 유효한 `0`은 그대로 둔다.
 4. **캐시 쓰기와 캐시 읽기를 합치지 않는다.** 단가와 의미가 다르다. Codex의 `cached`와 같은 칸에 넣는 규칙은 정하지 않았다([§8](#8-protocol-개정-제안으로-남길-사항)).
 5. **`error_during_execution`, `error_max_budget_usd` 결과의 usage와 cost는 `null`이다.** 문서상 앞의 것은 session crash 때 비용 필드가 0으로 채워질 수 있고, 뒤의 것은 `usage`에서 예산을 넘긴 응답이 빠진다. 시간 값(`duration_ms`, `duration_api_ms`)은 남긴다.
-6. **`total_cost_usd`는 `costUsdEstimate`(ESTIMATED)로만 둔다.** 문서는 이 값이 빌드 시점의 가격표로 계산한 클라이언트 추정값이며 실제 청구와 다를 수 있다고 밝힌다.
+6. **API 오류로 끝난 결과의 usage와 cost도 `null`이다.** `terminal_reason`이 `api_error`이거나, `subtype`이 `success`인데 `is_error`가 `true`인 경우다. 실제 CLI 2.1.263 실행에서 인증이 실패하자(모델 호출 없음) `result`는 `subtype: "success"`, `is_error: true`, `terminal_reason: "api_error"`였고 토큰과 `total_cost_usd`가 모두 `0`이었다. `subtype`만 보면 정상 실행의 측정값 `0`으로 잘못 읽힌다.
+7. **`total_cost_usd`는 `costUsdEstimate`(ESTIMATED)로만 둔다.** 문서는 이 값이 빌드 시점의 가격표로 계산한 클라이언트 추정값이며 실제 청구와 다를 수 있다고 밝힌다.
 
 알려진 한계(코드로 막지 않았다):
 
@@ -82,10 +83,11 @@ CLI 버전이 바뀌면 필드가 달라질 수 있다. 실제 실행 결과를 
 
 ## 6. 검증에 쓴 샘플
 
-승인된 실제 Claude Code 실행 로그가 없어 **공식 문서 형식만 검증했다.** 설치된 CLI(2.1.263)의 실제 출력과 대조하지 않았다.
+성공한 실제 실행 로그는 아직 없다. 정상 경로는 **공식 문서 형식으로만 검증했다.** 실제 로그는 2026-10-23에 승인받아 실행한 `claude -p` 한 번(CLI 2.1.263, `--output-format stream-json --verbose --allowedTools Read --max-budget-usd 0.5`)뿐이며, OAuth 세션 만료로 모델 호출 없이 끝났다(비용 0). 이 로그로 오류 결과 처리([§5](#5-claude-code-집계-규칙) 6번)를 검증했다. 같은 실행에서 hook과 `system/init` event가 `result` 앞에 오는 것도 확인했다.
 
 | fixture | 내용 |
 |---|---|
+| [auth-failed.real.jsonl](../../../bench/value-validation/fixtures/claude/auth-failed.real.jsonl) | 위 실제 실행. 허용 목록 방식으로 비식별 처리: event의 `type`·`subtype`·`parent_tool_use_id`·`error`, assistant 메시지의 `model`·`usage`, `result`의 숫자·상태 필드만 남겼다. message id는 `msg-redacted`로 바꿨다. 원본 로그는 저장소 밖 로컬에만 둔다 |
 | [result.json](../../../bench/value-validation/fixtures/claude/result.json) | `--output-format json`의 성공 결과 |
 | [stream.jsonl](../../../bench/value-validation/fixtures/claude/stream.jsonl) | `system/init`, 같은 id를 공유하는 병렬 tool 호출 assistant 메시지 2개, tool result, 두 번째 응답, 최종 `result` |
 | [truncated.jsonl](../../../bench/value-validation/fixtures/claude/truncated.jsonl) | 위 stream이 `result` 줄 중간에서 끊긴 것 |
