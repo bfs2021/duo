@@ -1,6 +1,6 @@
 # Contributing to DUO
 
-Thank you for helping. DUO is a small project with one maintainer, so small and focused contributions are the easiest to review and merge.
+Thank you for helping. DUO is maintained by a small team, so small and focused contributions are the easiest to review and merge.
 
 ## Before you start
 
@@ -9,6 +9,19 @@ Thank you for helping. DUO is a small project with one maintainer, so small and 
 - Issues labeled `good first issue` are a good place to start. If you have not contributed before, [docs/community/START_HERE.md](docs/community/START_HERE.md) ([한국어](docs/community/START_HERE.ko.md)) walks through the fork, the branch from `next`, the checks and the pull request.
 - Questions and ideas are welcome in [Discussions](https://github.com/kanghyunsoon/duo/discussions).
 - **Do not report security vulnerabilities in public issues, discussions or pull requests.** Use GitHub Private Vulnerability Reporting as described in [SECURITY.md](SECURITY.md).
+
+## How we work with contributors
+
+- **Claim before you start.** Comment on the issue with what you plan to change. A maintainer assigns it to you so two people do not work on the same thing. If you stop, say so in the issue and it goes back to the pool. An assignment with no activity for two weeks may be released after a reminder.
+- **Any schedule is fine.** There are no deadlines for contributors unless the issue says so.
+- **Language.** Ask questions in Korean or English. Please write issue titles, pull request titles and descriptions, and code comments in English so every contributor can read the record. Do not worry about polished English.
+- **AI tools are welcome.** You may use coding agents or AI assistants. You are responsible for the change: read it, understand it, run the checks yourself and answer review questions about it. Say in the pull request if an agent wrote a large part of it.
+- **One pull request, one problem.** Code changes need tests. Documentation changes need `pnpm docs:validate`.
+- **Review is a normal step.** "Changes requested" means the change is close, not rejected. Push fixes to the same branch and reply to each comment. A first-time contributor's CI starts after a maintainer approves the workflow run.
+- **No guaranteed merge.** A maintainer merges after a reviewer who is not the author approves and CI passes on Windows, Ubuntu and macOS. During a release freeze, approved pull requests may wait until the release is out.
+- **Slow reply?** If nobody answers your issue or pull request within a week, leave one follow-up comment. Please do not open a duplicate.
+- **Bug or vulnerability?** A bug goes in a public issue with the bug template. Anything that could let someone read secrets, run code or bypass a Decision check goes through [SECURITY.md](SECURITY.md) privately.
+- **Credit.** Your merged commits, reviews and issues are public GitHub history, and you may use them in a portfolio. Starring the repository is never required to contribute.
 
 ## Development
 

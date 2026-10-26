@@ -55,6 +55,17 @@ Open a pull request from your fork to **`kanghyunsoon/duo` base `next`**. Fill i
 - Agents may propose Decisions; only a person confirms them. Never weaken a Decision or a test expectation to get a PASS.
 - Never post credentials, tokens or private project files. Report vulnerabilities privately as described in [SECURITY.md](../../SECURITY.md).
 
+## 5. Working with us
+
+- Ask questions in Korean or English. Write issue and pull request titles, descriptions and code comments in English.
+- AI coding tools are fine. You are responsible for what you submit: understand it, run the checks and answer review questions.
+- Your first pull request's CI starts after a maintainer approves the workflow run. "Changes requested" is a normal step; push fixes to the same branch.
+- If nobody replies within a week, leave one follow-up comment on the same issue or pull request.
+- Merging is not guaranteed. While a release is frozen, approved pull requests may wait until it ships.
+- Merged work is public GitHub history you can use in a portfolio. Starring the repository is not required.
+
+The full policy is in [CONTRIBUTING.md](../../CONTRIBUTING.md#how-we-work-with-contributors).
+
 ## Try DUO first
 
 The [0.3.3 walkthrough](../examples/decision-review-0.3.3.md) shows a real forbidden-import BLOCK and the PASS after the fix, and says which steps need a person.

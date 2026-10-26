@@ -55,6 +55,17 @@ fork에서 **`kanghyunsoon/duo`의 `next`** 로 pull request를 엽니다. 템�
 - Agent는 Decision을 제안만 하고 확정은 사람이 합니다. PASS를 얻으려고 Decision이나 테스트 기대값을 약하게 바꾸지 마세요.
 - 자격 증명, 토큰, 비공개 프로젝트 파일은 올리지 마세요. 보안 취약점은 [SECURITY.md](../../SECURITY.md)대로 비공개로 알려 주세요.
 
+## 5. 함께 일하는 방식
+
+- 질문은 한국어나 영어 모두 괜찮습니다. 이슈와 PR의 제목·설명, 코드 주석은 영어로 써 주세요. 완벽한 영어가 아니어도 됩니다.
+- AI 코딩 도구를 써도 됩니다. 제출한 변경은 직접 이해하고, 검사를 직접 돌리고, 리뷰 질문에 답할 수 있어야 합니다.
+- 처음 올린 PR의 CI는 maintainer가 workflow 실행을 승인한 뒤 시작합니다. 수정 요청(Changes requested)은 정상적인 과정이니 같은 branch에 고쳐서 push하면 됩니다.
+- 일주일이 지나도 답이 없으면 같은 이슈나 PR에 댓글을 한 번 남겨 주세요. 중복 이슈는 만들지 마세요.
+- 병합은 보장되지 않습니다. release를 준비하는 동안에는 승인된 PR도 출시 뒤로 미뤄질 수 있습니다.
+- 병합된 기여는 공개 GitHub 기록이라 포트폴리오에 쓸 수 있습니다. Star는 기여 조건이 아닙니다.
+
+자세한 정책은 [CONTRIBUTING.md](../../CONTRIBUTING.md#how-we-work-with-contributors)에 있습니다.
+
 ## 먼저 써 보기
 
 [0.3.3 walkthrough](../examples/decision-review-0.3.3.md)에 실제 금지 import BLOCK과 수정 뒤 PASS가 있고, 어느 단계를 사람이 해야 하는지도 적혀 있습니다(영어).
